@@ -6,19 +6,29 @@ import CardComponent from '@/components/CardComponent';
 import { API } from '@/lib/api';
 
 const EMPLOYEE_ID = 1;
-const EMPLOYEE_NAME = '홍길동';
-const CARD_NUMBER = '1234567890123456';
-const MONTHLY_BUDGET = 1_000_000;
+const CARD_NUMBER = '1234567890123456'; // 카드 테이블 없음 — 시각용 고정값
+
+interface EmployeeProfile {
+  employee_id: number;
+  employee_name: string;
+  position: string;
+  department_id: number;
+  department_name: string;
+  monthly_budget_limit: number;
+}
 
 interface Transaction {
-  id: number;
+  transaction_id: number;
+  employee_id: number;
+  employee_name: string;
   merchant_name: string;
   amount: number | string;
+  category: string;
+  is_approved: boolean | null;
   payment_time?: string | null;
   created_at?: string | null;
-  is_approved: boolean;
-  category: string;
   reason?: string | null;
+  ai_risk_reason?: string | null;
 }
 
 function formatAmount(n: number) {
@@ -40,17 +50,23 @@ function isThisMonth(raw: string | null | undefined): boolean {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
 }
 
-// 잔여 한도 프로그레스 바
+function calcMonthlyUsage(list: Transaction[]): number {
+  return list
+    .filter((t) => t.is_approved === true && isThisMonth(t.payment_time ?? t.created_at))
+    .reduce((s, t) => s + Number(t.amount), 0);
+}
+
 function BudgetSummary({
   monthlyUsage,
-  remainingLimit,
+  budget,
 }: {
   monthlyUsage: number | null;
-  remainingLimit: number | null;
+  budget: number;
 }) {
   const usage = monthlyUsage ?? 0;
-  const progress = Math.min((usage / MONTHLY_BUDGET) * 100, 100);
-  const overBudget = (remainingLimit ?? 0) < 0;
+  const remaining = budget - usage;
+  const progress = budget > 0 ? Math.min((usage / budget) * 100, 100) : 0;
+  const overBudget = remaining < 0;
   const barColor =
     progress >= 90 ? 'bg-danger' : progress >= 70 ? 'bg-yellow-400' : 'bg-success';
 
@@ -66,16 +82,14 @@ function BudgetSummary({
         <div className="text-right">
           <p className="text-xs text-subtext mb-0.5">잔여 한도</p>
           <p className={`text-sm font-bold ${overBudget ? 'text-danger' : 'text-success'}`}>
-            {remainingLimit !== null
+            {monthlyUsage !== null
               ? overBudget
-                ? `${formatAmount(Math.abs(remainingLimit))} 초과`
-                : formatAmount(remainingLimit)
+                ? `${formatAmount(Math.abs(remaining))} 초과`
+                : formatAmount(remaining)
               : '-'}
           </p>
         </div>
       </div>
-
-      {/* 프로그레스 바 */}
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${barColor}`}
@@ -85,7 +99,7 @@ function BudgetSummary({
       <div className="flex justify-between mt-1">
         <p className="text-xs text-subtext">0원</p>
         <p className="text-xs text-subtext">
-          {Math.round(progress)}% / {formatAmount(MONTHLY_BUDGET)}
+          {Math.round(progress)}% / {formatAmount(budget)}
         </p>
       </div>
     </div>
@@ -94,87 +108,66 @@ function BudgetSummary({
 
 export default function HomePage() {
   const router = useRouter();
+  const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [monthlyUsage, setMonthlyUsage] = useState<number | null>(null);
-  const [remainingLimit, setRemainingLimit] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [sseConnected, setSseConnected] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
-  const calcAndSet = useCallback((list: Transaction[]) => {
-    const now = new Date();
-    const total = list
-      .filter((t) => t.is_approved && isThisMonth(t.payment_time ?? t.created_at))
-      .reduce((s, t) => s + Number(t.amount), 0);
-    setMonthlyUsage(total);
-    setRemainingLimit(MONTHLY_BUDGET - total);
-  }, []);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(API.transactions(EMPLOYEE_ID));
-      const data = await res.json();
-      const list: Transaction[] = Array.isArray(data) ? data : [];
-      setTransactions(list.slice(0, 5));
+      const [profileRes, txRes] = await Promise.all([
+        fetch(API.employeeProfile(EMPLOYEE_ID)),
+        fetch(API.transactions(EMPLOYEE_ID)),
+      ]);
 
-      if (data.monthly_usage !== undefined) {
-        setMonthlyUsage(data.monthly_usage);
-        setRemainingLimit(data.remaining_limit);
-      } else {
-        calcAndSet(list);
+      if (profileRes.ok) {
+        const p: EmployeeProfile = await profileRes.json();
+        setProfile(p);
+      }
+
+      if (txRes.ok) {
+        const list: Transaction[] = await txRes.json();
+        setTransactions(Array.isArray(list) ? list.slice(0, 5) : []);
+        setMonthlyUsage(calcMonthlyUsage(Array.isArray(list) ? list : []));
       }
     } catch {
       // 네트워크 오류 시 빈 상태 유지
     } finally {
       setLoading(false);
     }
-  }, [calcAndSet]);
+  }, []);
 
-  // SSE 연결
+  // SSE 실시간 연결
   useEffect(() => {
     fetchData();
 
-    const es = new EventSource(API.transactionStream(EMPLOYEE_ID));
+    const es = new EventSource(API.transactionStream());
     esRef.current = es;
 
     es.onopen = () => setSseConnected(true);
 
-    // named event: 'transaction'
     es.addEventListener('transaction', (e) => {
       try {
         const tx = JSON.parse(e.data) as Transaction;
+        // 이 직원의 거래만 반영
+        if (tx.employee_id !== EMPLOYEE_ID) return;
+
         setTransactions((prev) => {
-          const deduped = [tx, ...prev.filter((t) => t.id !== tx.id)];
+          const deduped = [tx, ...prev.filter((t) => t.transaction_id !== tx.transaction_id)];
           return deduped.slice(0, 5);
         });
-        if (tx.is_approved && isThisMonth(tx.payment_time ?? tx.created_at)) {
+        if (tx.is_approved === true && isThisMonth(tx.payment_time ?? tx.created_at)) {
           setMonthlyUsage((prev) => (prev ?? 0) + Number(tx.amount));
-          setRemainingLimit((prev) => (prev ?? MONTHLY_BUDGET) - Number(tx.amount));
         }
       } catch {
         // 잘못된 이벤트 무시
       }
     });
 
-    // fallback: message event
-    es.onmessage = (e) => {
-      try {
-        const tx = JSON.parse(e.data) as Transaction;
-        if (!tx.id) return;
-        setTransactions((prev) => {
-          const deduped = [tx, ...prev.filter((t) => t.id !== tx.id)];
-          return deduped.slice(0, 5);
-        });
-      } catch {
-        // 잘못된 메시지 무시
-      }
-    };
-
-    es.onerror = () => {
-      setSseConnected(false);
-      // EventSource가 자동 재연결하므로 close 하지 않음
-    };
+    es.onerror = () => setSseConnected(false);
 
     return () => {
       es.close();
@@ -184,21 +177,32 @@ export default function HomePage() {
 
   function handleTxClick(tx: Transaction) {
     const params = new URLSearchParams({
-      id: String(tx.id),
-      is_approved: String(tx.is_approved),
+      id: String(tx.transaction_id),
+      is_approved: String(tx.is_approved ?? false),
       amount: String(tx.amount),
       merchant_name: tx.merchant_name,
-      ...(tx.reason ? { reason: tx.reason } : {}),
+      ...(tx.ai_risk_reason ? { reason: tx.ai_risk_reason } : {}),
     });
     router.push(`/result?${params.toString()}`);
   }
+
+  const employeeName = profile?.employee_name ?? '로딩 중...';
+  const budget = profile?.monthly_budget_limit ?? 0;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <div className="flex-1 overflow-y-auto pb-24">
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 pt-6 pb-2">
-          <h1 className="text-xl font-bold text-foreground">안녕하세요 👋 {EMPLOYEE_NAME}님</h1>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">안녕하세요 👋</h1>
+            <p className="text-base font-semibold text-foreground">{employeeName}님</p>
+            {profile && (
+              <p className="text-xs text-subtext mt-0.5">
+                {profile.department_name} · {profile.position}
+              </p>
+            )}
+          </div>
           <button
             onClick={() => router.push('/qr')}
             className="text-xs bg-primary/10 text-primary font-semibold px-3 py-1.5 rounded-full"
@@ -208,18 +212,22 @@ export default function HomePage() {
         </div>
 
         {/* 카드 */}
-        <CardComponent employeeName={EMPLOYEE_NAME} cardNumber={CARD_NUMBER} />
+        <CardComponent employeeName={employeeName} cardNumber={CARD_NUMBER} />
 
         {/* 예산 요약 + 프로그레스 바 */}
-        <BudgetSummary monthlyUsage={monthlyUsage} remainingLimit={remainingLimit} />
+        <BudgetSummary monthlyUsage={monthlyUsage} budget={budget} />
 
         {/* 최근 결제 내역 */}
         <div className="flex items-center justify-between px-4 mt-5 mb-3">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold text-foreground">최근 결제 내역</h2>
             <div className="flex items-center gap-1">
-              <span className={`w-1.5 h-1.5 rounded-full ${sseConnected ? 'bg-success' : 'bg-gray-300'}`} />
-              <span className="text-[10px] text-subtext">{sseConnected ? '실시간' : '오프라인'}</span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${sseConnected ? 'bg-success animate-pulse' : 'bg-gray-300'}`}
+              />
+              <span className="text-[10px] text-subtext">
+                {sseConnected ? '실시간' : '오프라인'}
+              </span>
             </div>
           </div>
           <button onClick={fetchData} className="text-xs text-primary font-medium">
@@ -237,26 +245,35 @@ export default function HomePage() {
           <div className="px-4 flex flex-col gap-2">
             {transactions.map((tx) => (
               <div
-                key={tx.id}
+                key={tx.transaction_id}
                 onClick={() => handleTxClick(tx)}
                 className="bg-card rounded-xl p-4 shadow-sm flex justify-between items-center cursor-pointer active:opacity-70 transition-opacity"
               >
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{tx.merchant_name}</p>
+                <div className="flex-1 min-w-0 mr-3">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {tx.merchant_name}
+                  </p>
                   <p className="text-xs text-subtext mt-0.5">
                     {formatDate(tx.payment_time ?? tx.created_at)}
+                    {tx.category && (
+                      <span className="ml-1.5 text-subtext/70">· {tx.category}</span>
+                    )}
                   </p>
                 </div>
-                <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col items-end gap-1 shrink-0">
                   <p className="text-sm font-bold text-foreground">
                     {formatAmount(Number(tx.amount))}
                   </p>
                   <span
                     className={`text-xs font-semibold text-white px-2 py-0.5 rounded ${
-                      tx.is_approved ? 'bg-success' : 'bg-danger'
+                      tx.is_approved === true
+                        ? 'bg-success'
+                        : tx.is_approved === false
+                        ? 'bg-danger'
+                        : 'bg-gray-400'
                     }`}
                   >
-                    {tx.is_approved ? '승인' : '차단'}
+                    {tx.is_approved === true ? '승인' : tx.is_approved === false ? '차단' : '대기'}
                   </span>
                 </div>
               </div>

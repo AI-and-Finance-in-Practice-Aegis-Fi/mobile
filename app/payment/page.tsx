@@ -1,16 +1,22 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CardComponent from '@/components/CardComponent';
 import { API } from '@/lib/api';
 
 const EMPLOYEE_ID = 1;
-const EMPLOYEE_NAME = '홍길동';
 const CARD_NUMBER = '1234567890123456';
 
 type Category = 'Food' | 'Transport' | 'Entertainment' | 'Office' | 'Other';
 const CATEGORIES: Category[] = ['Food', 'Transport', 'Entertainment', 'Office', 'Other'];
+
+// POST /transactions/request 응답 타입
+interface PaymentResponse {
+  transaction_id: number;
+  is_approved: boolean;
+  reason: string;
+}
 
 // NFC 물결 애니메이션
 function NFCWave() {
@@ -45,17 +51,19 @@ function InfoRow({ label, value, highlight }: { label: string; value: string; hi
   );
 }
 
-// QR 모드: URL 파라미터로 결제 정보 자동 표시
+// QR 모드: URL 파라미터에서 결제 정보 자동 표시
 function QRPaymentMode({
   merchant,
   amount,
   category,
   reason,
+  employeeName,
 }: {
   merchant: string;
   amount: string;
   category: string;
   reason: string;
+  employeeName: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -97,12 +105,14 @@ function QRPaymentMode({
         return;
       }
 
-      const data = await res.json();
+      // POST 응답: transaction_id, is_approved, reason
+      // amount, merchant_name은 QR 파라미터에서 사용
+      const data: PaymentResponse = await res.json();
       const params = new URLSearchParams({
-        id: String(data.id),
+        id: String(data.transaction_id),
         is_approved: String(data.is_approved),
-        amount: String(data.amount),
-        merchant_name: data.merchant_name,
+        amount: amount,
+        merchant_name: merchant,
         ...(data.reason ? { reason: data.reason } : {}),
       });
       router.push(`/result?${params.toString()}`);
@@ -126,7 +136,7 @@ function QRPaymentMode({
         <p className="text-xs text-subtext px-4 mb-1">QR 코드 스캔으로 가져온 결제 정보</p>
       )}
 
-      <CardComponent employeeName={EMPLOYEE_NAME} cardNumber={CARD_NUMBER} />
+      <CardComponent employeeName={employeeName} cardNumber={CARD_NUMBER} />
 
       {showNFC ? (
         <NFCWave />
@@ -172,7 +182,7 @@ function QRPaymentMode({
 }
 
 // 수동 입력 폼 (QR 파라미터 없을 때 fallback)
-function ManualPaymentForm() {
+function ManualPaymentForm({ employeeName }: { employeeName: string }) {
   const router = useRouter();
   const [merchantName, setMerchantName] = useState('');
   const [amount, setAmount] = useState('');
@@ -210,12 +220,14 @@ function ManualPaymentForm() {
         return;
       }
 
-      const data = await res.json();
+      // POST 응답: transaction_id, is_approved, reason
+      // amount, merchant_name은 폼 입력값 사용
+      const data: PaymentResponse = await res.json();
       const params = new URLSearchParams({
-        id: String(data.id),
+        id: String(data.transaction_id),
         is_approved: String(data.is_approved),
-        amount: String(data.amount),
-        merchant_name: data.merchant_name,
+        amount: String(parsed),
+        merchant_name: merchantName.trim(),
         ...(data.reason ? { reason: data.reason } : {}),
       });
       router.push(`/result?${params.toString()}`);
@@ -237,7 +249,7 @@ function ManualPaymentForm() {
       <h1 className="text-xl font-bold text-foreground px-4 mb-1">Tap-and-Go 결제</h1>
       <p className="text-xs text-subtext px-4 mb-2">직접 입력</p>
 
-      <CardComponent employeeName={EMPLOYEE_NAME} cardNumber={CARD_NUMBER} />
+      <CardComponent employeeName={employeeName} cardNumber={CARD_NUMBER} />
 
       <form onSubmit={handleSubmit} className="px-4 mt-4 flex flex-col gap-4">
         <div>
@@ -273,6 +285,14 @@ function PaymentContent() {
   const sp = useSearchParams();
   const merchant = sp.get('merchant');
   const amount = sp.get('amount');
+  const [employeeName, setEmployeeName] = useState('');
+
+  useEffect(() => {
+    fetch(API.employeeProfile(EMPLOYEE_ID))
+      .then((r) => r.json())
+      .then((d) => setEmployeeName(d.employee_name ?? ''))
+      .catch(() => {});
+  }, []);
 
   if (merchant && amount) {
     return (
@@ -281,11 +301,12 @@ function PaymentContent() {
         amount={amount}
         category={sp.get('category') ?? 'Other'}
         reason={sp.get('reason') ?? ''}
+        employeeName={employeeName}
       />
     );
   }
 
-  return <ManualPaymentForm />;
+  return <ManualPaymentForm employeeName={employeeName} />;
 }
 
 export default function PaymentPage() {
