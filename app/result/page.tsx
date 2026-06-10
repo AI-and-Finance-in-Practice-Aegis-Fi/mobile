@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { API } from '@/lib/api';
 
@@ -14,9 +14,19 @@ function ResultContent() {
   const merchantName = sp.get('merchant_name') ?? '';
   const reason = sp.get('reason') ?? '';
 
+  const [ready, setReady] = useState(false);
   const [approving, setApproving] = useState(false);
   const [approvalDone, setApprovalDone] = useState(false);
   const [approvalError, setApprovalError] = useState('');
+
+  // 직접 접근 가드 — 필수 파라미터 없으면 홈으로
+  useEffect(() => {
+    if (!sp.get('id') || sp.get('is_approved') === null) {
+      router.replace('/');
+    } else {
+      setReady(true);
+    }
+  }, [router, sp]);
 
   async function handleExceptionApproval() {
     setApproving(true);
@@ -40,8 +50,18 @@ function ResultContent() {
     }
   }
 
+  if (!ready) return null;
+
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center px-4 py-8">
+      {/* 뒤로가기 */}
+      <button
+        onClick={() => router.back()}
+        className="self-start text-primary text-sm font-semibold mb-4"
+      >
+        ← 뒤로가기
+      </button>
+
       <div className="bg-card rounded-2xl p-6 flex flex-col items-center shadow-md">
         {/* 결과 아이콘 */}
         <div

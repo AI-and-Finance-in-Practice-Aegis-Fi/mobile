@@ -6,4 +6,6 @@ export const API = {
   requestPayment: `${BASE_URL}/api/v1/transactions/request`,
   requestApproval: (transactionId: number) =>
     `${BASE_URL}/api/v1/approvals/${transactionId}/request`,
+  transactionStream: (employeeId: number) =>
+    `${BASE_URL}/api/v1/transactions/stream?employee_id=${employeeId}`,
 };
