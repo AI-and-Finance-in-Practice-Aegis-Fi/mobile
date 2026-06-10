@@ -2,14 +2,24 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: '직원 법인카드',
+  title: 'Aegis-Fi 법인카드',
   description: 'Tap-and-Go 법인카드 결제 앱',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Aegis-Fi',
+  },
+  icons: {
+    apple: '/icons/icon-192.png',
+  },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  themeColor: '#2563EB',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
