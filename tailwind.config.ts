@@ -14,8 +14,8 @@ const colors = {
 } as const;
 
 const fontFamily = {
-  sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
-} as const;
+  sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'] as string[],
+};
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const config: Config = {
