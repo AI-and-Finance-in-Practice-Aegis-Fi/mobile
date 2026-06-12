@@ -1,32 +1,59 @@
 import type { Config } from 'tailwindcss';
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  디자인 토큰 — Figma 확정 후 이 섹션만 수정하면 됩니다
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const colors = {
-  primary:    '#2563EB',   // 주요 버튼·포인트
-  success:    '#16A34A',   // 승인 상태
-  danger:     '#DC2626',   // 차단·오류
-  background: '#F3F4F6',   // 앱 배경
-  foreground: '#111827',   // 본문 텍스트
-  subtext:    '#6B7280',   // 보조 텍스트
-  card:       '#FFFFFF',   // 카드/패널 배경
-} as const;
-
-const fontFamily = {
-  sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'] as string[],
-};
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 const config: Config = {
+  darkMode: ["class"],
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
   ],
   theme: {
-    extend: { colors, fontFamily },
+    extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        // Mobile-specific aliases — keep existing class names working
+        success: "hsl(var(--success))",
+        danger: "hsl(var(--destructive))",
+        subtext: "hsl(var(--muted-foreground))",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'] as string[],
+      },
+    },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };
 
 export default config;

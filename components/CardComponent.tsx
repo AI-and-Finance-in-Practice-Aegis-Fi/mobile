@@ -14,8 +14,8 @@ export default function CardComponent({ employeeName, cardNumber }: CardComponen
     <div
       className="mx-4 my-3 rounded-[12px] p-5 flex flex-col justify-between aspect-[86/54] relative overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #3A1F8F 0%, #1A3A8F 100%)',
-        boxShadow: '0 8px 28px rgba(26, 15, 100, 0.40)',
+        background: 'linear-gradient(135deg, #0a4d45 0%, #137c72 100%)',
+        boxShadow: '0 8px 28px rgba(19, 124, 114, 0.40)',
       }}
     >
       {/* 상단 */}
