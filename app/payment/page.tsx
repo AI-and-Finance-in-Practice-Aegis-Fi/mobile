@@ -109,7 +109,9 @@ function QRPaymentMode({ merchant, amount, category, reason }: {
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         setError((d as { message?: string }).message ?? '결제 요청에 실패했습니다.');
-        setShowNFC(false); setLoading(false); return;
+        setShowNFC(false);
+        setLoading(false);
+        return;
       }
 
       const data: PaymentResponse = await res.json();
@@ -125,7 +127,8 @@ function QRPaymentMode({ merchant, amount, category, reason }: {
       router.push(`/result?${params.toString()}`);
     } catch {
       setError('결제 요청에 실패했습니다. 다시 시도해주세요.');
-      setShowNFC(false); setLoading(false);
+      setShowNFC(false);
+      setLoading(false);
     }
   }
 
