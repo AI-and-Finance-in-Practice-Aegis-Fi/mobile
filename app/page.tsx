@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation';
 import CardComponent from '@/components/CardComponent';
 import { HomeSkeleton } from '@/components/Skeleton';
 import { API } from '@/lib/api';
-
-const EMPLOYEE_ID = 1;
-const CARD_NUMBER = '1234567890123456';
-const PROFILE_CACHE_KEY = `emp_profile_${EMPLOYEE_ID}`;
+import { EMPLOYEE_ID, CARD_NUMBER, PROFILE_CACHE_KEY, CATEGORY_KO } from '@/lib/constants';
 
 interface EmployeeProfile {
   employee_id: number;
@@ -32,11 +29,6 @@ interface Transaction {
   created_at?: string | null;
   ai_risk_reason?: string | null;
 }
-
-const CATEGORY_KO: Record<string, string> = {
-  Food: '식비', Transport: '교통', Entertainment: '접대/오락',
-  Office: '사무용품', Other: '기타',
-};
 
 function formatAmount(n: number) {
   return Math.round(n).toLocaleString('ko-KR') + '원';
@@ -120,6 +112,7 @@ export default function HomePage() {
   const [txLoading, setTxLoading] = useState(true);
   const [sseConnected, setSseConnected] = useState(false);
   const esRef = useRef<EventSource | null>(null);
+  const sseRetryRef = useRef(0);
 
   const fetchData = useCallback(async () => {
     setTxLoading(true);
@@ -156,31 +149,50 @@ export default function HomePage() {
     setTxLoading(false);
   }, []);
 
-  // SSE 실시간 연결
+  // SSE 실시간 연결 (자동 재연결: 지수 백오프 2s→4s→8s…최대 30s)
   useEffect(() => {
     fetchData();
 
-    const es = new EventSource(API.transactionStream());
-    esRef.current = es;
-    es.onopen = () => setSseConnected(true);
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-    es.addEventListener('transaction', (e) => {
-      try {
-        const tx = JSON.parse(e.data) as Transaction;
-        if (tx.employee_id !== EMPLOYEE_ID) return;
+    function connect() {
+      const es = new EventSource(API.transactionStream());
+      esRef.current = es;
 
-        setTransactions((prev) =>
-          [tx, ...prev.filter((t) => t.transaction_id !== tx.transaction_id)].slice(0, 5)
-        );
-        if (tx.is_approved === true && isThisMonth(tx.payment_time ?? tx.created_at)) {
-          setMonthlyUsage((prev) => (prev ?? 0) + Number(tx.amount));
-        }
-      } catch {}
-    });
+      es.onopen = () => {
+        setSseConnected(true);
+        sseRetryRef.current = 0;
+      };
 
-    es.onerror = () => setSseConnected(false);
+      es.addEventListener('transaction', (e) => {
+        try {
+          const tx = JSON.parse(e.data) as Transaction;
+          if (tx.employee_id !== EMPLOYEE_ID) return;
+          setTransactions((prev) =>
+            [tx, ...prev.filter((t) => t.transaction_id !== tx.transaction_id)].slice(0, 5)
+          );
+          if (tx.is_approved === true && isThisMonth(tx.payment_time ?? tx.created_at)) {
+            setMonthlyUsage((prev) => (prev ?? 0) + Number(tx.amount));
+          }
+        } catch {}
+      });
 
-    return () => { es.close(); esRef.current = null; };
+      es.onerror = () => {
+        setSseConnected(false);
+        es.close();
+        const delay = Math.min(2000 * Math.pow(2, sseRetryRef.current), 30000);
+        sseRetryRef.current += 1;
+        reconnectTimer = setTimeout(connect, delay);
+      };
+    }
+
+    connect();
+
+    return () => {
+      esRef.current?.close();
+      esRef.current = null;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+    };
   }, [fetchData]);
 
   function handleTxClick(tx: Transaction) {

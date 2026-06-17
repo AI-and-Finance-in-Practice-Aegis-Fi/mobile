@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://backend-production-3353.up.railway.app';
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://backend-production-3353.up.railway.app';
 
 export const API = {
   employeeProfile: (employeeId: number) =>

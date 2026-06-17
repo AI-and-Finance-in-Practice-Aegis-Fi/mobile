@@ -4,10 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CardComponent from '@/components/CardComponent';
 import { API } from '@/lib/api';
-
-const EMPLOYEE_ID = 1;
-const CARD_NUMBER = '1234567890123456';
-const PROFILE_CACHE_KEY = `emp_profile_${EMPLOYEE_ID}`;
+import { EMPLOYEE_ID, CARD_NUMBER, PROFILE_CACHE_KEY, CATEGORY_KO as CATEGORY_KO_MAP } from '@/lib/constants';
 
 type Category = 'Food' | 'Transport' | 'Entertainment' | 'Office' | 'Other';
 const CATEGORIES: { value: Category; label: string }[] = [
@@ -86,11 +83,6 @@ function QRPaymentMode({ merchant, amount, category, reason }: {
   const [showNFC, setShowNFC] = useState(false);
   const [error, setError] = useState('');
 
-  const CATEGORY_KO: Record<string, string> = {
-    Food: '식비', Transport: '교통', Entertainment: '접대/오락',
-    Office: '사무용품', Other: '기타',
-  };
-
   async function handleTap() {
     if (loading) return;
     setError('');
@@ -157,7 +149,7 @@ function QRPaymentMode({ merchant, amount, category, reason }: {
               <InfoRow label="금액" value={`${Number(amount).toLocaleString('ko-KR')}원`} highlight />
             </div>
             <div className="py-3">
-              <InfoRow label="카테고리" value={CATEGORY_KO[category] ?? category} />
+              <InfoRow label="카테고리" value={CATEGORY_KO_MAP[category] ?? category} />
             </div>
             {reason && <div className="pt-3"><InfoRow label="사유" value={reason} /></div>}
           </div>
