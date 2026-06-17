@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --primary: 174 74% 28%;
+    --background: 216 39% 4%;
+    --foreground: 58 71% 92%;
+    --card: 216 22% 11%;
+    --card-foreground: 58 71% 92%;
+    --primary: 197 48% 61%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 18% 92%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 18% 94%;
-    --muted-foreground: 215 16% 46%;
-    --accent: 44 91% 86%;
-    --accent-foreground: 31 70% 18%;
-    --destructive: 0 72% 51%;
+    --secondary: 220 20% 16%;
+    --secondary-foreground: 58 71% 92%;
+    --muted: 218 18% 18%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 352 47% 84%;
+    --accent-foreground: 216 39% 4%;
+    --destructive: 355 75% 61%;
     --destructive-foreground: 0 0% 100%;
-    --success: 142 72% 29%;
-    --border: 214 20% 86%;
-    --input: 214 20% 86%;
-    --ring: 174 74% 28%;
-    --radius: 0.75rem;
+    --success: 52 100% 92%;
+    --border: 217 14% 24%;
+    --input: 217 14% 24%;
+    --ring: 197 48% 61%;
+    --radius: 1.25rem;
   }
 
   * {
@@ -38,4 +38,22 @@
 @keyframes nfcWave {
   0%   { transform: scale(1);   opacity: 0.75; }
   100% { transform: scale(3.2); opacity: 0;    }
+}
+
+@layer components {
+  .dashboard-panel {
+    @apply bg-card border border-border shadow-[0_18px_48px_rgba(0,0,0,0.28)];
+  }
+
+  .dashboard-button {
+    @apply bg-primary text-background font-bold shadow-[0_12px_32px_rgba(107,174,201,0.28)] active:scale-[0.98] transition-transform;
+  }
+
+  .dashboard-ghost-button {
+    @apply bg-secondary border border-border text-foreground font-semibold active:bg-muted transition-colors;
+  }
+
+  .dashboard-input {
+    @apply w-full bg-secondary border border-border rounded-2xl px-4 py-3.5 text-sm text-foreground placeholder:text-subtext outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition;
+  }
 }

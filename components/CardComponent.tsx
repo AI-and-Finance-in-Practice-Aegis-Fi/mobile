@@ -12,44 +12,42 @@ function maskCardNumber(raw: string): string {
 export default function CardComponent({ employeeName, cardNumber }: CardComponentProps) {
   return (
     <div
-      className="mx-4 my-3 rounded-[12px] p-5 flex flex-col justify-between aspect-[86/54] relative overflow-hidden"
+      className="mx-4 my-3 rounded-[22px] p-5 flex flex-col justify-between aspect-[86/54] relative overflow-hidden border border-white/10"
       style={{
-        background: 'linear-gradient(135deg, #0a4d45 0%, #137c72 100%)',
-        boxShadow: '0 8px 28px rgba(19, 124, 114, 0.40)',
+        background: 'radial-gradient(circle at 18% 18%, rgba(255, 230, 236, 0.24), transparent 32%), linear-gradient(135deg, #111827 0%, #151b24 44%, #070b10 100%)',
+        boxShadow: '0 22px 52px rgba(0, 0, 0, 0.42)',
       }}
     >
-      {/* 상단 */}
+      <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-primary/20 blur-2xl" />
+      <div className="absolute -left-8 bottom-4 h-24 w-24 rounded-full bg-accent/20 blur-2xl" />
+
       <div className="flex justify-between items-start">
-        {/* 칩 */}
         <div
-          className="w-10 h-7 rounded-[4px]"
+          className="w-10 h-7 rounded-md border border-black/10"
           style={{
-            background: 'linear-gradient(135deg, #D4AF37 0%, #F5D980 50%, #C8991F 100%)',
+            background: 'linear-gradient(135deg, #fffbd1 0%, #e4c7ce 52%, #6baec9 100%)',
           }}
         />
-        {/* 브랜드 */}
-        <span className="text-white text-xs font-bold tracking-[0.2em]">AEGIS-FI</span>
+        <span className="text-foreground text-xs font-bold tracking-[0.2em]">AEGIS-FI</span>
       </div>
 
-      {/* 카드번호 */}
       <p
-        className="text-white font-mono tracking-[0.22em] text-lg"
+        className="text-foreground font-mono tracking-[0.22em] text-lg relative z-10"
         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
       >
         {maskCardNumber(cardNumber)}
       </p>
 
-      {/* 하단 */}
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-end relative z-10">
         <div>
-          <p className="text-white/50 text-[9px] tracking-[0.15em] uppercase mb-0.5">Card Holder</p>
-          <p className="text-white text-sm font-semibold tracking-wide uppercase">
+          <p className="text-subtext text-[9px] tracking-[0.15em] uppercase mb-0.5">Card Holder</p>
+          <p className="text-foreground text-sm font-semibold tracking-wide uppercase">
             {employeeName}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-white/50 text-[9px] tracking-[0.15em] uppercase mb-0.5">Expires</p>
-          <p className="text-white text-sm font-semibold">12/27</p>
+          <p className="text-subtext text-[9px] tracking-[0.15em] uppercase mb-0.5">Expires</p>
+          <p className="text-foreground text-sm font-semibold">12/27</p>
         </div>
       </div>
     </div>

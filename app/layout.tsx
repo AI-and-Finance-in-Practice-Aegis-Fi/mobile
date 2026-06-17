@@ -19,14 +19,14 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#137c72',
+  themeColor: '#070b10',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body className="bg-gray-200 flex justify-center min-h-screen">
-        <div className="w-full max-w-[390px] min-h-screen bg-background relative">
+      <body className="bg-background flex justify-center min-h-screen">
+        <div className="w-full max-w-[390px] min-h-screen bg-background relative overflow-hidden">
           {children}
         </div>
       </body>

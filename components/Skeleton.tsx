@@ -1,5 +1,5 @@
 export function Skeleton({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
-  return <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} style={style} />;
+  return <div className={`animate-pulse bg-secondary rounded-lg ${className}`} style={style} />;
 }
 
 export function HomeSkeleton() {
@@ -19,7 +19,7 @@ export function HomeSkeleton() {
       <Skeleton className="mx-4 my-3 rounded-2xl" style={{ aspectRatio: '86/54' } as React.CSSProperties} />
 
       {/* 예산 바 */}
-      <div className="mx-4 mt-2 bg-card rounded-2xl p-4 shadow-sm">
+      <div className="mx-4 mt-2 dashboard-panel rounded-[22px] p-4">
         <div className="flex justify-between mb-3">
           <div>
             <Skeleton className="h-3 w-20 mb-2" />
@@ -46,7 +46,7 @@ export function HomeSkeleton() {
       {/* 거래 목록 */}
       <div className="px-4 flex flex-col gap-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-card rounded-xl p-4 flex justify-between items-center shadow-sm">
+          <div key={i} className="dashboard-panel rounded-2xl p-4 flex justify-between items-center">
             <div>
               <Skeleton className="h-4 w-28 mb-2" />
               <Skeleton className="h-3 w-24" />

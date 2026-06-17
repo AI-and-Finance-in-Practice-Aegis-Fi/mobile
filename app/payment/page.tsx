@@ -29,8 +29,8 @@ function NFCWave() {
           <span key={i} className="absolute w-16 h-16 rounded-full border-2 border-primary"
             style={{ animation: `nfcWave 1.5s ease-out ${delay}s infinite` }} />
         ))}
-        <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center relative z-10 shadow-lg">
-          <span className="text-3xl">💳</span>
+        <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center relative z-10 shadow-[0_12px_36px_rgba(107,174,201,0.35)]">
+          <span className="text-sm font-extrabold tracking-[0.16em] text-background">PAY</span>
         </div>
       </div>
       <p className="text-foreground font-semibold text-base">결제 처리 중...</p>
@@ -132,18 +132,18 @@ function QRPaymentMode({ merchant, amount, category, reason }: {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {!showNFC && (
-        <button onClick={() => router.back()} className="px-4 pt-5 pb-2 text-primary text-sm font-semibold text-left">
-          ← 돌아가기
+        <button onClick={() => router.back()} className="px-4 pt-6 pb-2 text-primary text-sm font-semibold text-left">
+          돌아가기
         </button>
       )}
-      <h1 className="text-xl font-bold text-foreground px-4 mb-0.5">Tap-and-Go 결제</h1>
+      <h1 className="text-3xl font-extrabold text-foreground px-4 mb-1">Tap-and-Go 결제</h1>
       {!showNFC && <p className="text-xs text-subtext px-4 mb-1">QR 코드 스캔으로 가져온 결제 정보</p>}
 
       <CardComponent employeeName={employeeName} cardNumber={CARD_NUMBER} />
 
       {showNFC ? <NFCWave /> : (
         <>
-          <div className="mx-4 mt-3 bg-card rounded-2xl p-5 shadow-sm divide-y divide-gray-100">
+          <div className="mx-4 mt-3 dashboard-panel rounded-[22px] p-5 divide-y divide-border">
             <div className="pb-3"><InfoRow label="가맹점" value={merchant} /></div>
             <div className="py-3">
               <InfoRow label="금액" value={`${Number(amount).toLocaleString('ko-KR')}원`} highlight />
@@ -157,8 +157,8 @@ function QRPaymentMode({ merchant, amount, category, reason }: {
           <div className="flex-1" />
           <div className="px-4 pb-10 pt-4">
             <button onClick={handleTap}
-              className="w-full bg-primary text-white font-bold text-lg rounded-2xl py-5 shadow-lg active:scale-95 transition-transform">
-              💳 결제 요청
+              className="w-full dashboard-button text-lg rounded-2xl py-5">
+              결제 요청
             </button>
           </div>
         </>
@@ -223,36 +223,36 @@ function ManualPaymentForm() {
     }
   }
 
-  const inputClass = 'w-full bg-card border border-gray-200 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-subtext outline-none focus:border-primary transition-colors';
+  const inputClass = 'dashboard-input';
 
   return (
     <div className="min-h-screen bg-background pb-8">
-      <button onClick={() => router.back()} className="px-4 pt-5 pb-2 block text-primary text-sm font-semibold">← 돌아가기</button>
-      <h1 className="text-xl font-bold text-foreground px-4 mb-1">Tap-and-Go 결제</h1>
+      <button onClick={() => router.back()} className="px-4 pt-6 pb-2 block text-primary text-sm font-semibold">돌아가기</button>
+      <h1 className="text-3xl font-extrabold text-foreground px-4 mb-1">Tap-and-Go 결제</h1>
       <p className="text-xs text-subtext px-4 mb-2">직접 입력</p>
       <CardComponent employeeName={employeeName} cardNumber={CARD_NUMBER} />
 
-      <form onSubmit={handleSubmit} className="px-4 mt-4 flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="mx-4 mt-4 dashboard-panel rounded-[22px] p-4 flex flex-col gap-4">
         <div>
-          <label className="text-sm font-semibold text-foreground block mb-1">가맹점명</label>
+          <label className="text-sm font-semibold text-foreground block mb-1.5">가맹점명</label>
           <input type="text" value={merchantName} onChange={(e) => setMerchantName(e.target.value)} placeholder="가맹점명 입력" className={inputClass} />
         </div>
         <div>
-          <label className="text-sm font-semibold text-foreground block mb-1">금액</label>
+          <label className="text-sm font-semibold text-foreground block mb-1.5">금액</label>
           <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="금액 입력 (원)" className={inputClass} />
         </div>
         <div>
-          <label className="text-sm font-semibold text-foreground block mb-1">카테고리</label>
+          <label className="text-sm font-semibold text-foreground block mb-1.5">카테고리</label>
           <select value={category} onChange={(e) => setCategory(e.target.value as Category)} className={inputClass}>
             {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-sm font-semibold text-foreground block mb-1">사용 사유</label>
+          <label className="text-sm font-semibold text-foreground block mb-1.5">사용 사유</label>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="사용 사유를 입력해주세요" rows={3} className={`${inputClass} resize-none`} />
         </div>
         {error && <p className="text-danger text-sm">{error}</p>}
-        <button type="submit" disabled={loading} className="w-full bg-primary text-white font-bold text-base rounded-xl py-4 disabled:opacity-60 flex items-center justify-center">
+        <button type="submit" disabled={loading} className="w-full dashboard-button text-base rounded-2xl py-4 disabled:opacity-60 flex items-center justify-center">
           {loading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : '결제 요청'}
         </button>
       </form>

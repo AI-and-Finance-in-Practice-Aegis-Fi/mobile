@@ -71,19 +71,19 @@ function BudgetSummary({ usage, budget }: { usage: number | null; budget: number
   const remaining = budget - u;
   const progress = budget > 0 ? Math.min((u / budget) * 100, 100) : 0;
   const overBudget = remaining < 0;
-  const barColor = progress >= 90 ? 'bg-danger' : progress >= 70 ? 'bg-yellow-400' : 'bg-success';
+  const barColor = progress >= 90 ? 'bg-danger' : progress >= 70 ? 'bg-accent' : 'bg-primary';
 
   return (
-    <div className="mx-4 mt-2 bg-card rounded-2xl p-4 shadow-sm">
-      <div className="flex justify-between items-start mb-3">
+    <div className="mx-4 mt-2 dashboard-panel rounded-[22px] p-4">
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <p className="text-xs text-subtext mb-0.5">이번 달 사용</p>
-          <p className="text-xl font-bold text-foreground">
+          <p className="text-xs text-subtext mb-1">이번 달 사용</p>
+          <p className="text-2xl font-extrabold text-accent">
             {usage !== null ? formatAmount(u) : '-'}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-subtext mb-0.5">잔여 한도</p>
+          <p className="text-xs text-subtext mb-1">잔여 한도</p>
           <p className={`text-sm font-bold ${overBudget ? 'text-danger' : 'text-success'}`}>
             {usage !== null
               ? overBudget ? `${formatAmount(Math.abs(remaining))} 초과` : formatAmount(remaining)
@@ -91,10 +91,10 @@ function BudgetSummary({ usage, budget }: { usage: number | null; budget: number
           </p>
         </div>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${progress}%` }} />
       </div>
-      <div className="flex justify-between mt-1">
+      <div className="flex justify-between mt-2">
         <p className="text-xs text-subtext">0원</p>
         <p className="text-xs text-subtext">{Math.round(progress)}% / {formatAmount(budget)}</p>
       </div>
@@ -216,21 +216,21 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 overflow-y-auto pb-28">
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-4 pt-6 pb-2">
+        <div className="flex items-center justify-between px-4 pt-7 pb-3">
           <div>
-            <p className="text-sm text-subtext">안녕하세요 👋</p>
-            <h1 className="text-xl font-bold text-foreground">{employeeName}님</h1>
+            <p className="text-xs font-semibold tracking-[0.14em] text-subtext uppercase">Aegis-Fi</p>
+            <h1 className="mt-2 text-3xl font-extrabold leading-tight text-foreground">대시보드</h1>
             {profile && (
-              <p className="text-xs text-subtext mt-0.5">
-                {profile.department_name} · {profile.position}
+              <p className="text-xs text-subtext mt-1.5">
+                {employeeName} · {profile.department_name} · {profile.position}
               </p>
             )}
           </div>
           <button
             onClick={() => router.push('/qr')}
-            className="text-xs bg-primary/10 text-primary font-semibold px-3 py-1.5 rounded-full"
+            className="dashboard-ghost-button text-xs px-3.5 py-2 rounded-xl"
           >
             QR 시연
           </button>
@@ -241,40 +241,42 @@ export default function HomePage() {
 
         {/* 최근 결제 내역 */}
         <div className="flex items-center justify-between px-4 mt-5 mb-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground">최근 결제 내역</h2>
-            <div className="flex items-center gap-1">
-              <span className={`w-1.5 h-1.5 rounded-full ${sseConnected ? 'bg-success animate-pulse' : 'bg-gray-300'}`} />
+          <div>
+            <h2 className="text-lg font-bold text-foreground">최근 결제 내역</h2>
+            <div className="mt-1 flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${sseConnected ? 'bg-primary animate-pulse' : 'bg-muted'}`} />
               <span className="text-[10px] text-subtext">{sseConnected ? '실시간' : '오프라인'}</span>
             </div>
           </div>
-          <button onClick={fetchData} className="text-xs text-primary font-medium">새로고침</button>
+          <button onClick={fetchData} className="text-xs text-primary font-semibold">새로고침 →</button>
         </div>
 
         {txLoading ? (
           <div className="px-4 flex flex-col gap-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-card rounded-xl p-4 flex justify-between items-center shadow-sm animate-pulse">
+              <div key={i} className="dashboard-panel rounded-2xl p-4 flex justify-between items-center animate-pulse">
                 <div>
-                  <div className="h-4 w-28 bg-gray-200 rounded-lg mb-2" />
-                  <div className="h-3 w-24 bg-gray-200 rounded-lg" />
+                  <div className="h-4 w-28 bg-secondary rounded-lg mb-2" />
+                  <div className="h-3 w-24 bg-secondary rounded-lg" />
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <div className="h-4 w-20 bg-gray-200 rounded-lg" />
-                  <div className="h-5 w-10 bg-gray-200 rounded" />
+                  <div className="h-4 w-20 bg-secondary rounded-lg" />
+                  <div className="h-5 w-10 bg-secondary rounded" />
                 </div>
               </div>
             ))}
           </div>
         ) : transactions.length === 0 ? (
-          <p className="text-center text-subtext text-sm py-10">결제 내역이 없습니다.</p>
+          <div className="mx-4 dashboard-panel rounded-2xl p-8 text-center">
+            <p className="text-subtext text-sm">결제 내역이 없습니다.</p>
+          </div>
         ) : (
           <div className="px-4 flex flex-col gap-2">
             {transactions.map((tx) => (
               <div
                 key={tx.transaction_id}
                 onClick={() => handleTxClick(tx)}
-                className="bg-card rounded-xl p-4 shadow-sm flex justify-between items-center cursor-pointer active:opacity-70 transition-opacity"
+                className="dashboard-panel rounded-2xl p-4 flex justify-between items-center cursor-pointer active:bg-muted transition-colors"
               >
                 <div className="flex-1 min-w-0 mr-3">
                   <p className="text-sm font-semibold text-foreground truncate">{tx.merchant_name}</p>
@@ -289,8 +291,8 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <p className="text-sm font-bold text-foreground">{formatAmount(Number(tx.amount))}</p>
-                  <span className={`text-xs font-semibold text-white px-2 py-0.5 rounded ${
-                    tx.is_approved === true ? 'bg-success' : tx.is_approved === false ? 'bg-danger' : 'bg-gray-400'
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                    tx.is_approved === true ? 'bg-success text-background' : tx.is_approved === false ? 'bg-danger text-white' : 'bg-secondary text-subtext'
                   }`}>
                     {tx.is_approved === true ? '승인' : tx.is_approved === false ? '차단' : '대기'}
                   </span>
@@ -301,12 +303,12 @@ export default function HomePage() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-background border-t border-gray-200 px-4 py-4">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-background/95 border-t border-border px-4 py-4 backdrop-blur">
         <button
           onClick={() => router.push('/payment')}
-          className="w-full bg-primary text-white font-bold text-base rounded-xl py-4 active:opacity-80"
+          className="w-full dashboard-button text-base rounded-2xl py-4"
         >
-          💳 Tap-and-Go 결제
+          Tap-and-Go 결제
         </button>
       </div>
     </div>

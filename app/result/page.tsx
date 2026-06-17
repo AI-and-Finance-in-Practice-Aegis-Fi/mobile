@@ -63,37 +63,37 @@ function ResultContent() {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center px-4 py-8">
       <button onClick={() => router.back()} className="self-start text-primary text-sm font-semibold mb-4">
-        ← 뒤로가기
+        뒤로가기
       </button>
 
-      <div className="bg-card rounded-2xl p-6 flex flex-col items-center shadow-md">
+      <div className="dashboard-panel rounded-[24px] p-6 flex flex-col items-center">
         {/* 결과 아이콘 */}
-        <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-3 ${isApproved ? 'bg-success' : 'bg-danger'}`}>
-          <span className="text-white text-4xl font-bold leading-none">{isApproved ? '✓' : '✕'}</span>
+        <div className={`w-[72px] h-[72px] rounded-2xl flex items-center justify-center mb-4 ${isApproved ? 'bg-success' : 'bg-danger'}`}>
+          <span className={`text-4xl font-bold leading-none ${isApproved ? 'text-background' : 'text-white'}`}>{isApproved ? '✓' : '✕'}</span>
         </div>
 
-        <h1 className={`text-xl font-bold mb-1 ${isApproved ? 'text-success' : 'text-danger'}`}>
+        <h1 className={`text-xl font-bold mb-2 ${isApproved ? 'text-success' : 'text-danger'}`}>
           {isApproved ? '결제 승인' : '결제 차단'}
         </h1>
 
-        <p className="text-3xl font-extrabold text-foreground mb-0.5">
+        <p className="text-3xl font-extrabold text-foreground mb-1">
           {amount.toLocaleString('ko-KR')}원
         </p>
         <p className="text-sm text-subtext">{merchantName}</p>
 
         {/* 카테고리 태그 */}
         {categoryLabel && (
-          <span className="mt-2 px-3 py-0.5 bg-gray-100 text-subtext text-xs rounded-full">
+          <span className="mt-3 px-3 py-1 bg-secondary border border-border text-subtext text-xs rounded-full">
             {categoryLabel}
           </span>
         )}
 
         {/* 구분선 */}
-        {(userReason || aiReason) && <div className="w-full border-t border-gray-100 my-4" />}
+        {(userReason || aiReason) && <div className="w-full border-t border-border my-5" />}
 
         {/* 사용 사유 */}
         {userReason && (
-          <div className="w-full bg-gray-50 rounded-xl p-3.5 mb-3">
+          <div className="w-full bg-secondary rounded-2xl border border-border p-3.5 mb-3">
             <p className="text-xs font-semibold text-subtext mb-1">사용 사유</p>
             <p className="text-sm text-foreground">{userReason}</p>
           </div>
@@ -101,9 +101,8 @@ function ResultContent() {
 
         {/* AI 차단 사유 (차단 시만) */}
         {!isApproved && aiReason && (
-          <div className="w-full bg-red-50 rounded-xl p-3.5 mb-4">
+          <div className="w-full bg-danger/10 rounded-2xl border border-danger/30 p-3.5 mb-4">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-xs">🤖</span>
               <p className="text-xs font-semibold text-danger">AI 차단 사유</p>
             </div>
             <p className="text-sm text-foreground">{aiReason}</p>
@@ -113,7 +112,7 @@ function ResultContent() {
         {/* 예외 승인 요청 */}
         {!isApproved && !approvalDone && (
           <button onClick={handleExceptionApproval} disabled={approving}
-            className="w-full bg-danger text-white font-bold text-sm rounded-xl py-4 disabled:opacity-60 flex items-center justify-center">
+            className="w-full bg-danger text-white font-bold text-sm rounded-2xl py-4 disabled:opacity-60 flex items-center justify-center active:scale-[0.98] transition-transform">
             {approving
               ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               : '예외 승인 요청'}
@@ -121,7 +120,7 @@ function ResultContent() {
         )}
 
         {approvalDone && (
-          <div className="w-full bg-green-50 rounded-xl p-4">
+          <div className="w-full bg-success/10 border border-success/30 rounded-2xl p-4">
             <p className="text-sm text-success text-center font-semibold">예외 승인 요청이 접수되었습니다.</p>
           </div>
         )}
@@ -130,7 +129,7 @@ function ResultContent() {
       </div>
 
       <button onClick={() => router.push('/')}
-        className="w-full bg-primary text-white font-bold text-base rounded-xl py-4 mt-4 active:opacity-80">
+        className="w-full dashboard-button text-base rounded-2xl py-4 mt-4">
         처음으로
       </button>
     </div>
