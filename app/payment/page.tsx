@@ -59,7 +59,6 @@ function useEmployeeName(): string {
   });
 
   useEffect(() => {
-    if (name) return;
     fetch(API.employeeProfile(EMPLOYEE_ID))
       .then((r) => r.ok ? r.json() : null)
       .then((p) => {
@@ -69,7 +68,7 @@ function useEmployeeName(): string {
         }
       })
       .catch(() => {});
-  }, [name]);
+  }, []);
 
   return name;
 }

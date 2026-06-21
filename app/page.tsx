@@ -131,19 +131,17 @@ export default function HomePage() {
         .catch(() => {})
     );
 
-    // 프로필 캐시 없을 때만 fetch
-    if (!sessionStorage.getItem(PROFILE_CACHE_KEY)) {
-      jobs.push(
-        fetch(API.employeeProfile(EMPLOYEE_ID))
-          .then((r) => r.ok ? r.json() : null)
-          .then((p: EmployeeProfile | null) => {
-            if (!p) return;
-            setProfile(p);
-            sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(p));
-          })
-          .catch(() => {})
-      );
-    }
+    // 항상 최신 프로필 fetch (캐시는 초기 렌더용, API가 우선)
+    jobs.push(
+      fetch(API.employeeProfile(EMPLOYEE_ID))
+        .then((r) => r.ok ? r.json() : null)
+        .then((p: EmployeeProfile | null) => {
+          if (!p) return;
+          setProfile(p);
+          sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(p));
+        })
+        .catch(() => {})
+    );
 
     await Promise.all(jobs);
     setTxLoading(false);
